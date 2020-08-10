@@ -1,0 +1,48 @@
+version: 2.1
+jobs:
+  build-and-deploy:
+    docker:
+      - image: circleci/node:14-buster
+
+    working_directory: ~/eatsofstrength
+
+    steps:
+      - checkout
+
+      - restore_cache:
+          keys:
+            - v1-dependencies-{{ checksum "package.json" }}
+            - v1-dependencies-
+
+      - run:
+          name: Install Dependencies
+          command: npm install
+
+      - save_cache:
+          paths:
+            - node_modules
+          key: v1-dependencies-{{ checksum "package.json" }}
+
+      - run:
+          name: Lint
+          command: npm run lint
+
+      - run:
+          name: Run Tests
+          command: npm run test
+
+      - run:
+          name: Build project
+          command: npm run build
+
+      # - run:
+      #     name: Deploy to Firebase
+      #     command: ~/eatsofstrength/node_modules/.bin/firebase deploy --token "${FIREBASE_TOKEN}"
+
+workflows:
+  main:
+    jobs:
+      - build-and-deploy:
+          filters:
+            branches:
+              only: development
